@@ -2,3 +2,8 @@
 2,RandomPlayer,xxxxxxxxx,1,xxxxxxxxx,18,game00002.log,
 3,Human,RandomPlayer,0,Human,5,game00003.log,
 4,Human,RandomPlayer,0,Human,6,game00004.log,
+5,Human,RandomPlayer,GAMEOVER USER CANCEL UNDECIDED,NOBODY,3,game00005.log,USER CANCEL
+6,Human,Human,GAMEOVER USER CANCEL UNDECIDED,NOBODY,3,game00006.log,USER CANCEL
+7,Human,Human,1,Human,7,game00007.log,
+8,Human,RandomPlayer,0,Human,4,game00008.log,
+9,RandomPlayer,Human,1,Human,5,game00009.log,
