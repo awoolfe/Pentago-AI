@@ -26,9 +26,9 @@ public class StudentPlayer extends PentagoPlayer {
         // You probably will make separate functions in MyTools.
         // For example, maybe you'll need to load some pre-processed best opening
         // strategies...
-        MyTools.getSomething();
         
-        Move myMove = boardState.getRandomMove();
+        
+        Move myMove = MyTools.getMove(boardState, boardState.getTurnPlayer());
 
         // Return your move to be processed by the server.
         return myMove;

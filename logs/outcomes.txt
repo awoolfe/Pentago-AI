@@ -7,3 +7,11 @@
 7,Human,Human,1,Human,7,game00007.log,
 8,Human,RandomPlayer,0,Human,4,game00008.log,
 9,RandomPlayer,Human,1,Human,5,game00009.log,
+13,Human,RandomPlayer,0,Human,5,game00013.log,
+14,Human,Human,GAMEOVER USER CANCEL UNDECIDED,NOBODY,0,game00014.log,USER CANCEL
+15,Human,RandomPlayer,0,Human,6,game00015.log,
+16,Human,260721870,0,Human,7,game00016.log,
+18,Human,260721870,0,Human,3,game00018.log,ILLEGAL MOVE: Player 1, Move: (4, 2), Swap: (BL, TL)
+19,Human,260721870,0,Human,5,game00019.log,
+20,Human,260721870,0,Human,4,game00020.log,
+21,260721870,Human,1,Human,6,game00021.log,
