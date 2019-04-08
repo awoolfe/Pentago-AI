@@ -160,8 +160,7 @@ class MonteCarlo {
 			}			
 		}
 		long totalTime = System.nanoTime();
-		while(System.nanoTime()-totalTime < 2000000000) {	
-		
+		while(System.nanoTime()-totalTime < 1990000000) {	
 			descent();
 		}
 		TreeNode best = getBestChildren(root);
@@ -197,17 +196,20 @@ class MonteCarlo {
 		PentagoMove goodMove = (PentagoMove)node.getBoardState().getRandomMove();
 		PentagoBoardState stateClone = (PentagoBoardState)node.getBoardState().clone();
 		stateClone.processMove(goodMove);
-		TreeNode newTree = new TreeNode(stateClone, new ArrayList<TreeNode>(), node);
-		newTree.setMove(goodMove);
-		while((node.contains(newTree))){
-			goodMove = (PentagoMove)node.getBoardState().getRandomMove();
-    		stateClone = (PentagoBoardState)node.getBoardState().clone();
-    		stateClone.processMove(goodMove);
-    		newTree = new TreeNode(stateClone, new ArrayList<TreeNode>(), node);
-    		newTree.setMove(goodMove);
-			//node.addChild(child);
-		}
+		TreeNode newTree = new TreeNode(stateClone, new ArrayList<TreeNode>(), null);
 		//node.addChild(newTree);
+		newTree.setMove(goodMove);
+		if(node.contains(newTree)) {
+			while(!(node.contains(newTree))){
+				goodMove = (PentagoMove)node.getBoardState().getRandomMove();
+				stateClone = (PentagoBoardState)node.getBoardState().clone();
+				stateClone.processMove(goodMove);
+    			newTree = new TreeNode(stateClone, new ArrayList<TreeNode>(), null);
+    			newTree.setMove(goodMove);
+			//node.addChild(c);
+			}
+		}
+		node.addChild(newTree);
 		return newTree;
 	}
 	
@@ -267,12 +269,12 @@ class TreeNode {
 	//private double numGames;
 	private double nodeVisit;
 	//private int miniMax;
-	private PentagoBoardState data = null;
+	private PentagoBoardState data;
 	//private PentagoBoard board= null;
 	private List<TreeNode> children = new ArrayList<>();
-	private TreeNode parent = null;
+	private TreeNode parent;
 	private List<UnaryOperator<PentagoCoord>> operators = new ArrayList();
-	private PentagoMove move = null;
+	private PentagoMove move;
 	
 	
  public TreeNode(PentagoBoardState data, List<TreeNode> children, TreeNode parent) {
@@ -282,7 +284,7 @@ class TreeNode {
 //		//this.setNodeVisit(nodeVisit);
 		this.setNumWins(0.0);
 		this.setNodeVisit(0.0);
-		this.setChildren(children);
+		this.children = children;
 		this.data = data;
 		//this.miniMax = this.evaluation(PlayerID);
 		this.parent = parent;
