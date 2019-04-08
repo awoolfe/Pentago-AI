@@ -160,7 +160,7 @@ class MonteCarlo {
 			}			
 		}
 		long totalTime = System.nanoTime();
-		while(System.nanoTime()-totalTime < 1990000000) {	
+		while(System.nanoTime()-totalTime < 1900000000) {	
 			descent();
 		}
 		TreeNode best = getBestChildren(root);
@@ -174,7 +174,7 @@ class MonteCarlo {
 		//PentagoBoardState stateClone = (PentagoBoardState)state.clone();
 		TreeNode temp = root;
 		Random randObj = new Random();
-		double p = 0.4;
+		double p = 0.3;
 		while(!(temp.getChildren().isEmpty())) {
 			if(randObj.nextFloat() <= p) {
 				//temp = (nextNewNode(temp));
@@ -260,6 +260,41 @@ class MonteCarlo {
 	
 }
 
+class Heuristic{
+	private TreeNode root;
+	private int PlayerID;
+	public Heuristic(TreeNode root, int PlayerID) {
+		this.root = root;
+		this.PlayerID = PlayerID;
+	}
+	
+	public Move getMove(PentagoBoardState state) {
+		PentagoBoardState stateClone = (PentagoBoardState)state.clone();
+		Move moveBest = stateClone.getRandomMove();
+		ArrayList<PentagoMove> legal = state.getAllLegalMoves();
+		TreeNode temp = root;
+		TreeNode bestChild = new TreeNode(stateClone, new ArrayList<>(), temp);
+		bestChild.setMove((PentagoMove)moveBest);
+		for(PentagoMove m: legal) {
+			stateClone.processMove(m);
+			if(stateClone.getWinner() == PlayerID) {
+				return m;
+			}
+			TreeNode node = new TreeNode(stateClone, new ArrayList<>(), null);
+			node.setEvaluation(PlayerID);
+			node.setMove(m);
+		}
+		for(TreeNode t: temp.getChildren()) {
+			if(t.getEval()<bestChild.getEval()) {
+				bestChild = t;
+			}
+		}
+		moveBest = bestChild.getMove();
+		return moveBest;
+	}
+	
+}
+
 class TreeNode {
 	private double value;
 	private double eval;
@@ -288,47 +323,47 @@ class TreeNode {
 		this.data = data;
 		//this.miniMax = this.evaluation(PlayerID);
 		this.parent = parent;
-//		this.operators.add(c -> new PentagoCoord(c.getX(), c.getY()+1));
-//		this.operators.add(c -> new PentagoCoord(c.getX()+1, c.getY()));
-//		this.operators.add(c -> new PentagoCoord(c.getX()+1, c.getY()+1));
-//		this.operators.add(c -> new PentagoCoord(c.getX()+1, c.getY()-1));
+		this.operators.add(c -> new PentagoCoord(c.getX(), c.getY()+1));
+		this.operators.add(c -> new PentagoCoord(c.getX()+1, c.getY()));
+		this.operators.add(c -> new PentagoCoord(c.getX()+1, c.getY()+1));
+		this.operators.add(c -> new PentagoCoord(c.getX()+1, c.getY()-1));
 	}
 	
-//    public void setEvaluation(int PlayerID) {
-//    	double eval=0.0;
-//        Piece currColour = PlayerID == 0 ? Piece.WHITE : Piece.BLACK;
-//        for(int i = 0; i<6; i++) {
-//        	for(int j = 0; j<6; j++) {
-//        		PentagoCoord current = new PentagoCoord(i,j);
-//        		while(true) {
-//        			try {
-//        			for(UnaryOperator<PentagoCoord> coord: this.operators) {
-//        				if (currColour == (this.data.getPieceAt(current))) {
-//        					eval++;
-//        					current = coord.apply(current);
-//        				} else {
-//        					break;
-//        				}
-//        				}
-//        			} catch (IllegalArgumentException e) { //We have run off the board
-//        				break;
-//        			}
-//        		}
-//        	}
-//        }
-//    	if(data.getWinner() == PlayerID) eval = 10;
-//    	if(data.getWinner() != PlayerID) eval = -10;
-//    	//if(s.getWinner() == Integer.MAX_VALUE) eval = 0;
-//    	this.eval = eval;
-//    }
-//    
-//    public void setEval(double eval) {
-//    	this.eval=eval;
-//    }
-//    
-//    public double getEval() {
-//    	return this.eval;
-//    }
+    public void setEvaluation(int PlayerID) {
+    	double eval=0.0;
+        Piece currColour = PlayerID == 0 ? Piece.WHITE : Piece.BLACK;
+        for(int i = 0; i<6; i++) {
+        	for(int j = 0; j<6; j++) {
+        		PentagoCoord current = new PentagoCoord(i,j);
+        		while(true) {
+        			try {
+        			for(UnaryOperator<PentagoCoord> coord: this.operators) {
+        				if (currColour == (this.data.getPieceAt(current))) {
+        					eval++;
+        					current = coord.apply(current);
+        				} else {
+        					break;
+        				}
+        				}
+        			} catch (IllegalArgumentException e) { //We have run off the board
+        				break;
+        			}
+        		}
+        	}
+        }
+    	if(data.getWinner() == PlayerID) eval = 10;
+    	if(data.getWinner() != PlayerID) eval = -10;
+    	//if(s.getWinner() == Integer.MAX_VALUE) eval = 0;
+    	this.eval = eval;
+    }
+    
+    public void setEval(double eval) {
+    	this.eval=eval;
+    }
+    
+    public double getEval() {
+    	return this.eval;
+    }
 //	 
 //	
 //	public boolean isWorse(TreeNode node) {
