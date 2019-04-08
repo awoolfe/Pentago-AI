@@ -102,7 +102,7 @@ public class PentagoBoardState extends BoardState {
             }
         }
 
-        rand = new Random(2019);
+        rand = new Random();
         this.winner = pbs.winner;
         this.turnPlayer = pbs.turnPlayer;
         this.turnNumber = pbs.turnNumber;

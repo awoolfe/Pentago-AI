@@ -27,7 +27,6 @@ public class StudentPlayer extends PentagoPlayer {
         // For example, maybe you'll need to load some pre-processed best opening
         // strategies...
         
-        
         Move myMove = MyTools.getMove(boardState, boardState.getTurnPlayer());
 
         // Return your move to be processed by the server.
