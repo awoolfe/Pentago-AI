@@ -1,0 +1,21 @@
+# Server version 0.08 running on mbp-giorgia-9:8123
+# Game ID: 683
+# Board class: pentago_swap.PentagoBoard
+# Timeout: 2000
+# First Move Timeout: 30000
+# Date: Mon Apr 08 21:12:41 EDT 2019
+# Player 1: Player-0, '260721870', running on mbp-giorgia-9
+# Player 2: Player-1, 'Human', running on mbp-giorgia-9
+START Player-0 260721870
+START Player-1 Human
+1 1 TL BL 0
+1 1 TL BL 1
+4 4 TR BR 0
+4 4 BR BL 1
+0 1 TL TR 0
+3 4 BR TR 1
+2 1 TL TR 0
+0 4 TR BL 1
+5 4 TR BL 0
+GAMEOVER WINNER 0
+# Game ended: Mon Apr 08 21:12:53 EDT 2019

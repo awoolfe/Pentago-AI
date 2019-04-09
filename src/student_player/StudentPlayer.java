@@ -3,7 +3,9 @@ package student_player;
 import boardgame.Move;
 
 import pentago_swap.PentagoPlayer;
+import pentago_swap.PentagoBoardState.Quadrant;
 import pentago_swap.PentagoBoardState;
+import pentago_swap.PentagoMove;
 
 /** A player file submitted by a student. */
 public class StudentPlayer extends PentagoPlayer {
@@ -14,7 +16,7 @@ public class StudentPlayer extends PentagoPlayer {
      * associate you with your agent. The constructor should do nothing else.
      */
     public StudentPlayer() {
-        super("260721870");
+        super("260721870"); 
     }
 
     /**
@@ -26,7 +28,7 @@ public class StudentPlayer extends PentagoPlayer {
         // You probably will make separate functions in MyTools.
         // For example, maybe you'll need to load some pre-processed best opening
         // strategies...
-        
+    	//Move myMove = new PentagoMove(1,0,Quadrant.TL,Quadrant.BL,boardState.getTurnPlayer());
         Move myMove = MyTools.getMove(boardState, boardState.getTurnPlayer());
 
         // Return your move to be processed by the server.
