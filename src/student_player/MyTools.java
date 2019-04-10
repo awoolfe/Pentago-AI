@@ -13,15 +13,13 @@ import pentago_swap.PentagoBoardState;
 import pentago_swap.PentagoBoardState;
 import pentago_swap.PentagoCoord;
 import pentago_swap.PentagoMove;
-import java.util.Scanner;
-import java.util.function.UnaryOperator;
-import java.io.File;
+
 
 
 
 public class MyTools {
     public static PentagoMove getMove(PentagoBoardState s, int PlayerID) {
-    	//OPENING MOVES
+    	//OPENING MOVES: Player always starts in available center spots of each quadrant for first two moves
     	PentagoMove myMove = (PentagoMove) s.getRandomMove();
     	
     	if(PlayerID == 0 && s.getTurnNumber() == 0) {	
@@ -36,6 +34,7 @@ public class MyTools {
    				myMove = move;
    			}
        }
+    	//check for available spaces
     	else if(PlayerID == 0 && s.getTurnNumber() == 1) {
     		PentagoMove move = new PentagoMove(1,1,Quadrant.TR,Quadrant.BR,PlayerID);
    			if(s.isLegal(move) == true) myMove = move;
@@ -57,9 +56,13 @@ public class MyTools {
    			if(s.isLegal(move) == true) myMove = move;
     	}
     	else {
+    		//for subsequent moves, act according to heuristic
+    		//create a root node that contains current board state
     		TreeNode root = new TreeNode(s, new ArrayList<>(), null);
+    		//old MonteCarlo method
     		//MonteCarlo makeTree = new MonteCarlo(root, PlayerID);
     		Heuristic makeTree = new Heuristic(root, PlayerID);
+    		//call getBestMove with current board state
     		myMove = (PentagoMove) makeTree.getBestMove(s);
     		
     	}
@@ -67,6 +70,8 @@ public class MyTools {
     }
  
   }
+
+	//old MonteCarlo class
 //class MonteCarlo {
 //	private TreeNode root;
 //	private int PlayerID;
@@ -193,6 +198,7 @@ class Heuristic{
 	private TreeNode root;
 	private int PlayerID;
 	
+	//constructor
 	public Heuristic(TreeNode root, int PlayerID) {
 		this.root = root;
 		this.PlayerID = PlayerID;
@@ -201,36 +207,45 @@ class Heuristic{
 
 	
 	public Move getBestMove(PentagoBoardState state) {
+		//clone current state and get a list of all legal moves
 		PentagoBoardState stateClone = (PentagoBoardState)state.clone();
 		ArrayList<PentagoMove> legal = stateClone.getAllLegalMoves();
+		//initialize moveBest to legal random move
 		Move moveBest = stateClone.getRandomMove();
+		//initialize temporary variable to store root, and best child as new tree node
 		TreeNode temp = root;
 		TreeNode bestChild = new TreeNode(null, null, null);
-		bestChild.setEval(0.0);
+		//bestChild.setEval(0.0);
+		//set move to random move
 		bestChild.setMove((PentagoMove)moveBest);
-		//bestChild.setEvaluation(PlayerID);
+		//for each legal move, process on the state clone and get the evaluation function value of the move 
+		//evaluation function is based on playerID (the current colour of the player)
 		for(PentagoMove m: legal) {
-			stateClone = (PentagoBoardState)state.clone();
+			
 			stateClone.processMove(m);
+			
+			//if the move results in an automatic win, return that move
 			if(stateClone.getWinner() == PlayerID) {
 				return m;
 			}
+			
+			//evaluate new child of temp, set move to m in legal
 			TreeNode node = new TreeNode(stateClone, new ArrayList<>(), null);
 			node.setEvaluation(PlayerID);
 			node.setMove(m);
-			
 			temp.addChild(node);
+			stateClone = (PentagoBoardState)state.clone();
 			
 		}
-		
+		//get the best child from all moves based on evaluation function
 		for(TreeNode t: temp.getChildren()) {
-			//System.out.print(t.getEval());
+			
 			if(t.getEval()>bestChild.getEval()) {
 				bestChild = t;
 			}
-			//System.out.print(bestChild.getBoardState().toString());
 		}
-		//System.out.print(bestChild.getBoardState().toString());
+		
+		//return best child
 		moveBest = bestChild.getMove();
 		
 		return moveBest;
@@ -238,12 +253,12 @@ class Heuristic{
 }
 
 class TreeNode {
-	private double value;
-	private double eval;
-
-	private double numWins;
+	//old variables for MonteCarlo method:
+	//private double value;
+	//private double numWins;
 	//private double numGames;
-	private double nodeVisit;
+	//private double nodeVisit;
+	private double eval;
 	private PentagoBoardState data;
 	private List<TreeNode> children = new ArrayList<>();
 	private TreeNode parent;
@@ -253,19 +268,22 @@ class TreeNode {
  public TreeNode(PentagoBoardState data, List<TreeNode> children, TreeNode parent) {
 //		this.value = value;
 //		this.setNodeVisit(nodeVisit);
+//		this.setNumWins(0.0);
+//		this.setNodeVisit(0.0);
+	 	//Heuristic values
 	 	this.eval = 0.0;
-		this.setNumWins(0.0);
-		this.setNodeVisit(0.0);
 		this.children = children;
 		this.data = data;
 		this.parent = parent;
 	}
 	
+ 	//evaluation function
     public void setEvaluation(int PlayerID) {
+    	//set eval to 0.0, get current piece colour (line taken from checkWin method in PentagoBoardState
     	double val=0.0;
         Piece currColour = PlayerID == 0 ? Piece.WHITE : Piece.BLACK;
         Piece oppColour = Piece.BLACK;
-        int oppID = 0;
+        int oppID = 0; //id of opponent
         if(currColour == Piece.WHITE) {
         	oppColour = Piece.BLACK;
         	oppID = 1; 
@@ -274,60 +292,75 @@ class TreeNode {
         	oppID = 0;
         }
         PentagoCoord current = new PentagoCoord(0,0);
-        int num = 0;
-        int numOpp = 0;
-        int numThree = 0;
-        int numFour = 0;
+        int num = 0; //number of pieces on the board
+        int numOpp = 0; //number of opponent pieces on the board
+        double numThree = 0.0; //number of "three-in-a-rows"
+        double numFour = 0.0; //number of "four-in-a-rows"
+       // switch(currColour) {
+        //case WHITE:
+        
+        //check every row:
         for(int i = 0; i<6; i++) {
         	for(int j = 0; j<6; j++) {
         		current = new PentagoCoord(i,j);
+        		
+        		//increase number of pieces in the row
         		if(currColour == (this.data.getPieceAt(current))) {
         			num++;
-        			
-        		}if(oppColour == (this.data.getPieceAt(current)) && num>=4 && ((i==1 && j==1)||(i==1&&j==4)||(i==4&&j==1)||(i==4&&j==4)) ) {
+        		
+        		//increase number of opponents pieces in the row only if number of pieces is greater than four
+        		}if(oppColour == (this.data.getPieceAt(current)) && num>=4 ) {
         			numOpp++;
-        		}	
+        		}
         	}
+        	//if there are three or four pieces in a row, update these numbers and subtract a function based on the number of opponent pieces
         	if(num == 3) {
     			numThree++;
+    			numThree -= 0.5*numOpp;
             }if(num == 4) {
     			numFour++;
             }if(numOpp>0) {
-            	numFour--;
+            	numFour -= numOpp;
             }
+        	
         	num = 0;
         	numOpp=0;
         }
-        num = 0;
-    	numOpp=0;
+        //do the same evaluation for all columns, diagonals on the board
+        //check every column
         for(int j = 0; j<6; j++) {
         	for(int i = 0; i<6; i++) {
         		current = new PentagoCoord(i,j);
         		if(currColour == (this.data.getPieceAt(current))) {
         			num++;
         			
-        		}if(oppColour == (this.data.getPieceAt(current))&& num>=4 && ((i==1 && j==1)||(i==1&&j==4)||(i==4&&j==1)||(i==4&&j==4)) ) {
+        		}if(oppColour == (this.data.getPieceAt(current))&& num>=4 ) {
         			numOpp++;
         		}
         	}
         	if(num == 3) {
     			numThree++;
+    			numThree-= 0.5*numOpp;
             }if(num == 4) {
     			numFour++;
             }if(numOpp>0) {
-            	numFour--;
+            	numFour -= numOpp;
             }
         	num = 0;
         	numOpp=0;
         
-        }//first diagonal
+        }
         if(num == 3) {
 			numThree++;
+			numThree -= 0.5*numOpp;
 		}if(num == 4) {
 			numFour++;
+			numFour-= 0.4*numOpp;
 		}
         num = 0;
     	numOpp=0;
+    	
+    	//check the first diagonal where it is possible to get five in a row
         int j = 0;
         for(int i = 1; i<6; i++) {
         		
@@ -339,14 +372,18 @@ class TreeNode {
         			numOpp++;
         		}
         	j++;
-        }//second diagonal
+        }
         if(num == 3) {
 			numThree++;
+			numThree-= 0.5*numOpp;
         }if(num == 4) {
 			numFour++;
+			numFour -= 0.4*numOpp;
         }
     	num = 0;
     	numOpp=0;
+    	
+    	//second diagonal
         j=0;
         for(int i = 0; i<6; i++) {
         	
@@ -358,14 +395,18 @@ class TreeNode {
         			numOpp++;
         		}
         	j++;
-        }//third diagonal
+        }
         if(num == 3) {
 			numThree++;
+			numThree -= 0.5*numOpp;
 		}if(num == 4) {
 			numFour++;
+			numFour -= 0.4*numOpp;
 		}
     	num = 0;
     	numOpp=0;
+    	
+    	//third diagonal
         j=1;
         for(int i = 0; i<5; i++) {
         		current = new PentagoCoord(i,j);
@@ -376,14 +417,18 @@ class TreeNode {
         			numOpp++;
         		}
         	j++;
-        }//fourth diagonal
+        }
         if(num == 3) {
 			numThree++;
+			numThree-= 0.5*numOpp;
 		}if(num == 4) {
 			numFour++;
+			numFour-= 0.4*numOpp;
 		}
     	num = 0;
     	numOpp=0;
+    	
+    	//fourth diagonal
         j=0;
         for(int i = 4; i>-1; i--) {
         		current = new PentagoCoord(i,j);
@@ -394,14 +439,18 @@ class TreeNode {
         			numOpp++;
         		}
         	j++;
-        }//fifth diagonal
+        }
         if(num == 3) {
 			numThree++;
+			numThree-= 0.5*numOpp;
 		}if(num == 4) {
 			numFour++;
+			numFour -= 0.4*numOpp;
 		}
     	num = 0;
     	numOpp=0;
+    	
+    	//fifth diagonal
         j=0;
         for(int i = 5; i>-1; i--) {
         		current = new PentagoCoord(i,j);
@@ -412,14 +461,18 @@ class TreeNode {
         			numOpp++;
         		}
         	j++;
-        }//sixth diagonal
+        }
         if(num == 3) {
 			numThree++;
+			numThree-= 0.5*numOpp;
 		}if(num == 4) {
 			numFour++;
+			numFour-= 0.4*numOpp;
 		}
     	num = 0;
     	numOpp=0;
+    	
+    	//sixth diagonal
         j=1;
         for(int i = 5; i>0; i--) {
         		current = new PentagoCoord(i,j);
@@ -433,49 +486,251 @@ class TreeNode {
         }
         if(num == 3) {
 			numThree++;
+			numThree -= 0.5*numOpp;
 		}if(num == 4) {
 			numFour++;
+			numFour -= 0.4*numOpp;
 		}
-		val = 100*numThree+1000*numFour;
+		
+		//update the value of the board state weighting four-in-a-rows more heavily
+		val = 2*numThree+5*numFour;
+//		//old switch case to make black play more defensively
+//		case BLACK:
+//			for(int i = 0; i<6; i++) {
+//	        	for(int k = 0; k<6; k++) {
+//	        		current = new PentagoCoord(i,k);
+//	        		
+//	        		if(currColour == (this.data.getPieceAt(current))) {
+//	        			num++;
+//	        			
+//	        		}if(oppColour == (this.data.getPieceAt(current)) ) {
+//	        			numOpp++;
+//	        		}
+//	        	}
+//	        	if(numOpp == 3) {
+//	    			numThree++;
+//	    			numThree += 0.5*num;
+//	            }if(numOpp == 4) {
+//	    			numFour++;
+//	    			numFour += 0.5*num;
+//	            }if(num == 3) {
+//	    			numThree++;
+//	    			
+//	            }if(num == 4) {
+//	    			numFour++;
+//	            }
+//	        	
+//	        	num = 0;
+//	        	numOpp=0;
+//	        }
+//	        num = 0;
+//	    	numOpp=0;
+//	        for(int k = 0; k<6; k++) {
+//	        	for(int i = 0; i<6; i++) {
+//	        		current = new PentagoCoord(i,k);
+//	        		if(currColour == (this.data.getPieceAt(current))) {
+//	        			num++;
+//	        			
+//	        		}if(oppColour == (this.data.getPieceAt(current))&& num>=4 ) {
+//	        			numOpp++;
+//	        		}
+//	        	}
+//	        	if(numOpp == 3) {
+//	    			numThree++;
+//	    			numThree += 0.5*num;
+//	            }if(numOpp == 4) {
+//	    			numFour++;
+//	    			numFour += 0.5*num;
+//	            }if(num == 3) {
+//	    			numThree++;
+//	    			
+//	            }if(num == 4) {
+//	    			numFour++;
+//	            }
+//	        	num = 0;
+//	        	numOpp=0;
+//	        
+//	        }//first diagonal
+//	        if(numOpp == 3) {
+//    			numThree++;
+//    			numThree += 0.5*num;
+//            }if(numOpp == 4) {
+//    			numFour++;
+//    			numFour += 0.5*num;
+//            }if(num == 3) {
+//    			numThree++;
+//    			
+//            }if(num == 4) {
+//    			numFour++;
+//            }
+//	        num = 0;
+//	    	numOpp=0;
+//	        int k = 0;
+//	        for(int i = 1; i<6; i++) {
+//	        		
+//	        		current = new PentagoCoord(i,k);
+//	        		if(currColour == (this.data.getPieceAt(current))) {
+//	        			num++;
+//	        			 
+//	        		}if(oppColour == (this.data.getPieceAt(current))) {
+//	        			numOpp++;
+//	        		}
+//	        	k++;
+//	        }//second diagonal
+//	        if(numOpp == 3) {
+//    			numThree++;
+//    			numThree += 0.5*num;
+//            }if(numOpp == 4) {
+//    			numFour++;
+//    			numFour += 0.5*num;
+//            }if(num == 3) {
+//    			numThree++;
+//    			
+//            }if(num == 4) {
+//    			numFour++;
+//            }
+//	    	num = 0;
+//	    	numOpp=0;
+//	        k=0;
+//	        for(int i = 0; i<6; i++) {
+//	        	
+//	        		current = new PentagoCoord(i,k);
+//	        		if(currColour == (this.data.getPieceAt(current))) {
+//	        			num++;
+//	        			
+//	        		}if(oppColour == (this.data.getPieceAt(current))) {
+//	        			numOpp++;
+//	        		}
+//	        	k++;
+//	        }//third diagonal
+//	        if(numOpp == 3) {
+//    			numThree++;
+//    			numThree += 0.5*num;
+//            }if(numOpp == 4) {
+//    			numFour++;
+//    			numFour += 0.5*num;
+//            }if(num == 3) {
+//    			numThree++;
+//    			
+//            }if(num == 4) {
+//    			numFour++;
+//            }
+//	    	num = 0;
+//	    	numOpp=0;
+//	        k=1;
+//	        for(int i = 0; i<5; i++) {
+//	        		current = new PentagoCoord(i,k);
+//	        		if(currColour == (this.data.getPieceAt(current))) {
+//	        			num++;
+//	        			 
+//	        		}if(oppColour == (this.data.getPieceAt(current))) {
+//	        			numOpp++;
+//	        		}
+//	        	k++;
+//	        }//fourth diagonal
+//	        if(numOpp == 3) {
+//    			numThree++;
+//    			numThree += 0.5*num;
+//            }if(numOpp == 4) {
+//    			numFour++;
+//    			numFour += 0.5*num;
+//            }if(num == 3) {
+//    			numThree++;
+//    			
+//            }if(num == 4) {
+//    			numFour++;
+//            }
+//	    	num = 0;
+//	    	numOpp=0;
+//	        k=0;
+//	        for(int i = 4; i>-1; i--) {
+//	        		current = new PentagoCoord(i,k);
+//	        		if(currColour == (this.data.getPieceAt(current))) {
+//	        			num++;
+//	        			
+//	        		}if(oppColour == (this.data.getPieceAt(current))) {
+//	        			numOpp++;
+//	        		}
+//	        	k++;
+//	        }//fifth diagonal
+//	        if(numOpp == 3) {
+//    			numThree++;
+//    			numThree += 0.5*num;
+//            }if(numOpp == 4) {
+//    			numFour++;
+//    			numFour += 0.5*num;
+//            }if(num == 3) {
+//    			numThree++;
+//    			
+//            }if(num == 4) {
+//    			numFour++;
+//            }
+//	    	num = 0;
+//	    	numOpp=0;
+//	        k=0;
+//	        for(int i = 5; i>-1; i--) {
+//	        		current = new PentagoCoord(i,k);
+//	        		if(currColour == (this.data.getPieceAt(current))) {
+//	        			num++;
+//	        			
+//	        		}if(oppColour == (this.data.getPieceAt(current))) {
+//	        			numOpp++;
+//	        		}
+//	        	k++;
+//	        }//sixth diagonal
+//	        if(numOpp == 3) {
+//    			numThree++;
+//    			numThree += 0.5*num;
+//            }if(numOpp == 4) {
+//    			numFour++;
+//    			numFour += 0.5*num;
+//            }if(num == 3) {
+//    			numThree++;
+//    			
+//            }if(num == 4) {
+//    			numFour++;
+//            }
+//	    	num = 0;
+//	    	numOpp=0;
+//	        k=1;
+//	        for(int i = 5; i>0; i--) {
+//	        		current = new PentagoCoord(i,k);
+//	        		if(currColour == (this.data.getPieceAt(current))) {
+//	        			num++;
+//	        			
+//	        		}if(oppColour == (this.data.getPieceAt(current))) {
+//	        			numOpp++;
+//	        		}
+//	        	k++;
+//	        }
+//	        if(numOpp == 3) {
+//    			numThree++;
+//    			numThree += 0.5*num;
+//            }if(numOpp == 4) {
+//    			numFour++;
+//    			numFour += 0.5*num;
+//            }if(num == 3) {
+//    			numThree++;
+//    			
+//            }if(num == 4) {
+//    			numFour++;
+//            }
+//			val = 2*numThree+3*numFour;
+//		case EMPTY:
+//			break;
+//        }
+		
+		//check for winner - if opponent wins with the board state, prefer not to select the move
     	if(data.getWinner() == PlayerID) val = Integer.MAX_VALUE;
     	if(data.getWinner() == oppID) val = Integer.MIN_VALUE;
     	this.eval = val;
     }
     
-    public void setEval(double eval) {
-    	this.eval=eval;
-    }
-    
     public double getEval() {
     	return this.eval;
     }
-//	 
-//	
-//	public boolean isWorse(TreeNode node) {
-//		if(node.getEval()>=this.getEval()) {
-//			return true;
-//		}else return false;
-//	}
-//	 
-	public void setValue() {
-		 double UTC = this.numWins/this.nodeVisit; //+ Math.sqrt(Math.log(this.parent.nodeVisit)/this.nodeVisit);
-		 this.value = UTC;
- 	}
-	
-	public TreeNode getBestValue() {
-		TreeNode best = this.getChildren().get(0);
-		for(TreeNode t: this.getChildren()) {
-			if(best.getValue()<t.getValue()) {
-				best = t;
-			}
-		}
-		return best;
-	}
-	
-	public double getValue() {
-		return this.value;
-	}
-	
+
+    //method to return whether a state is the same as another state (i.e. symmetric), used in MonteCarlo for efficiency
 	public boolean contains(TreeNode node) {
 		for(TreeNode n: this.getChildren()) {
 			if(n.getBoardState().toString().equals(node.getBoardState().toString())) {
@@ -485,11 +740,6 @@ class TreeNode {
 		return false;
 	}
 	 
-	public void addChildren(List<TreeNode> children) {
-		 children.forEach(each -> each.setParent(this));
-		 this.getChildren().addAll(children);
-	}
-	 
 	public List<TreeNode> getChildren() {
 		 return children;
 	}
@@ -497,35 +747,10 @@ class TreeNode {
 	public PentagoBoardState getBoardState() {
 		 return data;
 	}
-	 
 	public void setBoardState(PentagoBoardState data) {
 		 this.data = data;
 	}
-	 
-	public void setParent(TreeNode parent) {
-		 this.parent = parent;
-	}
-	 
-	public TreeNode getParent() {
-		 return parent;
-	}
-
-	public double getNumWins() {
-		return numWins;
-	}
-
-	public void setNumWins(double numWins) {
-		this.numWins = numWins;
-	}
-
-	public double getNodeVisit() {
-		return nodeVisit;
-	}
-
-	public void setNodeVisit(double nodeVisit) {
-		this.nodeVisit = nodeVisit;
-	}
-
+	
 	public PentagoMove getMove() {
 		return move;
 	}
@@ -543,6 +768,58 @@ class TreeNode {
 		this.children = children;
 	}
 	
+	 
+	public void setParent(TreeNode parent) {
+		 this.parent = parent;
 	}
+	 
+	public TreeNode getParent() {
+		 return parent;
+	}
+//	 //old methods for MonteCarlo
+//	
+//	public boolean isWorse(TreeNode node) {
+//		if(node.getEval()>=this.getEval()) {
+//			return true;
+//		}else return false;
+//	}
+//	 
+//	public void setValue() {
+//		 double UTC = this.numWins/this.nodeVisit; //+ Math.sqrt(Math.log(this.parent.nodeVisit)/this.nodeVisit);
+//		 this.value = UTC;
+//	}
+//	
+//	public TreeNode getBestValue() {
+//		TreeNode best = this.getChildren().get(0);
+//		for(TreeNode t: this.getChildren()) {
+//			if(best.getValue()<t.getValue()) {
+//				best = t;
+//			}
+//		}
+//		return best;
+//	}
+//	
+//	public double getValue() {
+//		return this.value;
+//	}
+//	
+//	public double getNumWins() {
+//		return numWins;
+//	}
+//
+//	public void setNumWins(double numWins) {
+//		this.numWins = numWins;
+//	}
+//
+//	public double getNodeVisit() {
+//		return nodeVisit;
+//	}
+//
+//	public void setNodeVisit(double nodeVisit) {
+//		this.nodeVisit = nodeVisit;
+//	}
+
+
+}
 
 

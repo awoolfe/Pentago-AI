@@ -1,0 +1,32 @@
+# Server version 0.08 running on mbp-giorgia-9:8123
+# Game ID: 1141
+# Board class: pentago_swap.PentagoBoard
+# Timeout: 2000
+# First Move Timeout: 30000
+# Date: Tue Apr 09 10:47:29 EDT 2019
+# Player 1: Player-0, 'RandomPlayer', running on localhost
+# Player 2: Player-1, '260721870', running on localhost
+START Player-0 RandomPlayer
+START Player-1 260721870
+4 2 TR BR 0
+1 1 TL BL 1
+1 5 TL TR 0
+4 4 TR BR 1
+0 1 TL TR 0
+2 0 TL TR 1
+4 4 TL TR 0
+3 4 TL TR 1
+2 5 TR BL 0
+0 0 TR BL 1
+1 0 TL BR 0
+1 0 TL BL 1
+1 0 TL TR 0
+0 4 BL BR 1
+4 1 TL BR 0
+1 5 BL BR 1
+0 0 TL TR 0
+2 0 TL TR 1
+4 0 TL BR 0
+0 5 TR BL 1
+GAMEOVER WINNER 1
+# Game ended: Tue Apr 09 10:47:29 EDT 2019

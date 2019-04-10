@@ -1,0 +1,22 @@
+# Server version 0.08 running on mbp-giorgia-9:8123
+# Game ID: 960
+# Board class: pentago_swap.PentagoBoard
+# Timeout: 2000
+# First Move Timeout: 30000
+# Date: Tue Apr 09 09:30:36 EDT 2019
+# Player 1: Player-0, 'RandomPlayer', running on localhost
+# Player 2: Player-1, '260721870', running on localhost
+START Player-0 RandomPlayer
+START Player-1 260721870
+1 5 TL BR 0
+1 1 TL BL 1
+0 1 BL BR 0
+4 1 TR BR 1
+3 0 TR BL 0
+0 4 TL TR 1
+0 3 TR BR 0
+2 1 TL BL 1
+5 5 TR BR 0
+0 1 TL BL 1
+GAMEOVER WINNER 1
+# Game ended: Tue Apr 09 09:30:36 EDT 2019
